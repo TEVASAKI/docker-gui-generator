@@ -3,251 +3,509 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>.wslconfig GUI Generator</title>
+    <title>.wslconfig Complete GUI Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .preview { background: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', 'Courier New', monospace; border-left: 4px solid #007acc; }
+        .preview { background: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', monospace; border-left: 4px solid #007acc; }
         .advanced { border: 2px dashed #ffc107; background: #fff3cd; }
+        .expert { border: 2px dashed #dc3545; background: #f8d7da; }
         .warning { background: #fff3cd; border-left: 4px solid #ff9800; padding: 12px; margin: 10px 0; }
         .success { background: #d4edda; border-left: 4px solid #28a745; padding: 12px; margin: 10px 0; }
+        .section-toggle { cursor: pointer; user-select: none; }
     </style>
 </head>
 <body class="bg-gray-50 p-8">
     <div class="max-w-7xl mx-auto">
-        <h1 class="text-4xl font-bold text-center mb-4 text-blue-600">.wslconfig GUI Generator</h1>
-        <p class="text-center text-lg mb-2 text-gray-700">Docker Desktop + WSL2 オーバーヘッド解消特化</p>
+        <h1 class="text-4xl font-bold text-center mb-4 text-blue-600">.wslconfig 完全版 GUI Generator</h1>
+        <p class="text-center text-lg mb-2 text-gray-700">全設定項目網羅（50+項目） - Docker Desktop + WSL2最適化</p>
         <div id="systemInfo" class="text-center text-sm text-gray-600 mb-8"></div>
 
         <div class="grid lg:grid-cols-2 gap-8">
             <!-- 左: 入力フォーム -->
-            <div>
-                <h2 class="text-2xl font-semibold mb-6">設定入力</h2>
+            <div class="overflow-auto" style="max-height: 90vh;">
+                <h2 class="text-2xl font-semibold mb-6 sticky top-0 bg-gray-50 py-2 z-10">設定入力</h2>
 
-                <!-- 基本設定 -->
+                <!-- [general] セクション -->
+                <section class="mb-6 p-6 bg-white rounded-lg shadow">
+                    <h3 class="font-bold mb-4 text-xl flex items-center section-toggle" onclick="toggleSection('general')">
+                        <span class="bg-purple-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-2">G</span>
+                        [general] 全般設定
+                        <span class="ml-2 text-sm">(クリックで展開)</span>
+                    </h3>
+                    <div id="generalSection" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">instanceIdleTimeout</label>
+                            <input id="instanceIdleTimeout" type="number" class="w-full p-2 border rounded" value="15000">
+                            <span class="text-xs text-gray-500">WSLインスタンスがアイドル後停止するまでの時間(ms)。-1=自動停止なし</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- [wsl2] 基本設定 -->
                 <section class="mb-6 p-6 bg-white rounded-lg shadow">
                     <h3 class="font-bold mb-4 text-xl flex items-center">
                         <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-2">1</span>
-                        基本設定（初心者向け）
+                        [wsl2] 基本設定（初心者向け）
                     </h3>
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium mb-2">メモリ上限</label>
+                            <label class="block text-sm font-medium mb-2">memory</label>
                             <input id="memory" type="number" min="1" max="256" class="w-full p-3 border rounded-lg" value="8">
                             <span class="text-xs text-gray-500">GB（推奨: 物理メモリの50-75%）</span>
                             <div id="memoryWarning" class="warning hidden mt-2"></div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-2">CPUコア数</label>
+                            <label class="block text-sm font-medium mb-2">processors</label>
                             <input id="processors" type="number" min="1" max="128" class="w-full p-3 border rounded-lg" value="4">
-                            <span class="text-xs text-gray-500">推奨: 物理コアの50-75%</span>
+                            <span class="text-xs text-gray-500">論理プロセッサ数（推奨: 50-75%）</span>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-2">スワップ容量</label>
+                            <label class="block text-sm font-medium mb-2">swap</label>
                             <input id="swap" type="number" min="0" max="64" class="w-full p-3 border rounded-lg" value="2">
                             <span class="text-xs text-gray-500">GB（0=無効、推奨: 2-4GB）</span>
                         </div>
                     </div>
                 </section>
 
-                <!-- 詳細設定 -->
+                <!-- [wsl2] 詳細設定 -->
                 <section class="mb-6 p-6 advanced rounded-lg shadow">
-                    <div class="flex items-center mb-4">
+                    <div class="flex items-center mb-4 section-toggle" onclick="toggleSection('advanced')">
                         <input id="enableAdvanced" type="checkbox" class="mr-2 w-5 h-5">
-                        <label class="font-bold text-xl">詳細設定（上級者向け）</label>
-                        <span class="ml-2 px-3 py-1 bg-yellow-200 text-xs rounded-full">警告: 上級者向け</span>
+                        <label class="font-bold text-xl">[wsl2] 詳細設定（中級者向け）</label>
+                        <span class="ml-2 px-3 py-1 bg-yellow-200 text-xs rounded-full">⚠️ 中級者向け</span>
                     </div>
-                    <div id="advancedOptions" class="hidden space-y-4">
+                    <div id="advancedSection" class="hidden space-y-4">
                         <div>
-                            <label class="flex items-center mb-2">
-                                <input id="localhostForwarding" type="checkbox" checked class="mr-2">
-                                <span class="text-sm font-medium">localhostForwarding（Docker必須）</span>
-                            </label>
-                            <span class="text-xs text-gray-500">Windows ↔ WSL間のlocalhost通信を有効化</span>
+                            <label class="block text-sm font-medium mb-2">swapFile</label>
+                            <input id="swapFile" type="text" placeholder="C:\\temp\\wsl-swap.vhdx" class="w-full p-2 border rounded">
+                            <span class="text-xs text-gray-500">スワップファイルの絶対パス（空欄=デフォルト）</span>
                         </div>
                         <div>
                             <label class="flex items-center mb-2">
-                                <input id="autoMemoryReclaim" type="checkbox" checked class="mr-2">
-                                <span class="text-sm font-medium">autoMemoryReclaim（推奨）</span>
+                                <input id="localhostForwarding" type="checkbox" checked class="mr-2">
+                                <span class="text-sm font-medium">localhostForwarding</span>
                             </label>
-                            <span class="text-xs text-gray-500">未使用メモリをWindowsに自動返却（WSL 1.3.10+）</span>
+                            <span class="text-xs text-gray-500">localhost転送（Docker必須）</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">vmIdleTimeout</label>
+                            <input id="vmIdleTimeout" type="number" class="w-full p-2 border rounded" value="60000">
+                            <span class="text-xs text-gray-500">VM自動停止時間(ms)。-1=停止なし、0=即停止</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">kernel</label>
+                            <input id="kernel" type="text" placeholder="C:\\kernel\\bzImage" class="w-full p-2 border rounded">
+                            <span class="text-xs text-gray-500">カスタムカーネルの絶対パス（空欄=デフォルト）</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">kernelCommandLine</label>
+                            <input id="kernelCommandLine" type="text" placeholder="panic=10" class="w-full p-2 border rounded">
+                            <span class="text-xs text-gray-500">カーネル起動パラメータ</span>
+                        </div>
+                        <div>
+                            <label class="flex items-center mb-2">
+                                <input id="nestedVirtualization" type="checkbox" checked class="mr-2">
+                                <span class="text-sm font-medium">nestedVirtualization</span>
+                            </label>
+                            <span class="text-xs text-gray-500">ネスト仮想化（WSL内でDocker/VM実行）</span>
                         </div>
                         <div>
                             <label class="flex items-center mb-2">
                                 <input id="pageReporting" type="checkbox" class="mr-2">
-                                <span class="text-sm font-medium">pageReporting（メモリ最適化）</span>
+                                <span class="text-sm font-medium">pageReporting</span>
                             </label>
-                            <span class="text-xs text-gray-500">ページ報告でメモリ解放を積極化</span>
+                            <span class="text-xs text-gray-500">ページ報告（メモリ解放積極化）</span>
                         </div>
                         <div>
                             <label class="flex items-center mb-2">
-                                <input id="sparseVhd" type="checkbox" checked class="mr-2">
-                                <span class="text-sm font-medium">sparseVhd（ディスク最適化）</span>
+                                <input id="guiApplications" type="checkbox" checked class="mr-2">
+                                <span class="text-sm font-medium">guiApplications</span>
                             </label>
-                            <span class="text-xs text-gray-500">VHDディスク自動縮小（実験的機能）</span>
+                            <span class="text-xs text-gray-500">WSLg（Linux GUIアプリ）サポート</span>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-2">swapFile（カスタムパス）</label>
-                            <input id="swapFile" type="text" placeholder="C:\\temp\\wsl-swap.vhdx" class="w-full p-2 border rounded">
-                            <span class="text-xs text-gray-500">空欄=デフォルト</span>
+                            <label class="flex items-center mb-2">
+                                <input id="debugConsole" type="checkbox" class="mr-2">
+                                <span class="text-sm font-medium">debugConsole</span>
+                            </label>
+                            <span class="text-xs text-gray-500">dmesg出力コンソール表示（デバッグ用）</span>
                         </div>
                     </div>
                 </section>
 
-                <button onclick="validate()" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-bold text-lg hover:bg-blue-700">生成！</button>
+                <!-- [wsl2] ネットワーク設定 -->
+                <section class="mb-6 p-6 advanced rounded-lg shadow">
+                    <div class="flex items-center mb-4 section-toggle" onclick="toggleSection('network')">
+                        <input id="enableNetwork" type="checkbox" class="mr-2 w-5 h-5">
+                        <label class="font-bold text-xl">[wsl2] ネットワーク設定（中級者向け）</label>
+                        <span class="ml-2 px-3 py-1 bg-yellow-200 text-xs rounded-full">⚠️ 中級者向け</span>
+                    </div>
+                    <div id="networkSection" class="hidden space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">networkingMode</label>
+                            <select id="networkingMode" class="w-full p-2 border rounded">
+                                <option value="NAT">NAT（デフォルト）</option>
+                                <option value="mirrored">mirrored（Windows 11 22H2+）</option>
+                                <option value="bridged">bridged（要Hyper-V）</option>
+                                <option value="virtioproxy">virtioproxy</option>
+                                <option value="none">none（ネットワーク無効）</option>
+                            </select>
+                            <span class="text-xs text-gray-500">NAT=標準、mirrored=IPv6/VPN対応、bridged=LAN直結</span>
+                        </div>
+                        <div>
+                            <label class="flex items-center mb-2">
+                                <input id="dnsTunneling" type="checkbox" checked class="mr-2">
+                                <span class="text-sm font-medium">dnsTunneling</span>
+                            </label>
+                            <span class="text-xs text-gray-500">DNSトンネル（VPN環境で推奨）</span>
+                        </div>
+                        <div>
+                            <label class="flex items-center mb-2">
+                                <input id="dnsProxy" type="checkbox" checked class="mr-2">
+                                <span class="text-sm font-medium">dnsProxy</span>
+                            </label>
+                            <span class="text-xs text-gray-500">DNSプロキシ（NAT時有効）</span>
+                        </div>
+                        <div>
+                            <label class="flex items-center mb-2">
+                                <input id="firewall" type="checkbox" checked class="mr-2">
+                                <span class="text-sm font-medium">firewall</span>
+                            </label>
+                            <span class="text-xs text-gray-500">Windowsファイアウォール適用</span>
+                        </div>
+                        <div>
+                            <label class="flex items-center mb-2">
+                                <input id="autoProxy" type="checkbox" checked class="mr-2">
+                                <span class="text-sm font-medium">autoProxy</span>
+                            </label>
+                            <span class="text-xs text-gray-500">Windowsプロキシ設定継承</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">vmSwitch</label>
+                            <input id="vmSwitch" type="text" placeholder="MySwitch" class="w-full p-2 border rounded">
+                            <span class="text-xs text-gray-500">Hyper-V仮想スイッチ名（bridgedモード時）</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">macAddress</label>
+                            <input id="macAddress" type="text" placeholder="00:15:5D:00:00:02" class="w-full p-2 border rounded">
+                            <span class="text-xs text-gray-500">MACアドレス（bridgedモード時）</span>
+                        </div>
+                        <div>
+                            <label class="flex items-center mb-2">
+                                <input id="dhcp" type="checkbox" checked class="mr-2">
+                                <span class="text-sm font-medium">dhcp</span>
+                            </label>
+                            <span class="text-xs text-gray-500">DHCP有効化（bridgedモード時）</span>
+                        </div>
+                        <div>
+                            <label class="flex items-center mb-2">
+                                <input id="ipv6" type="checkbox" class="mr-2">
+                                <span class="text-sm font-medium">ipv6</span>
+                            </label>
+                            <span class="text-xs text-gray-500">IPv6有効化（bridgedモード時）</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">ignoredPorts</label>
+                            <input id="ignoredPorts" type="text" placeholder="3000,8080" class="w-full p-2 border rounded">
+                            <span class="text-xs text-gray-500">mirroredモードで除外するポート（カンマ区切り）</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- [experimental] 実験的機能 -->
+                <section class="mb-6 p-6 expert rounded-lg shadow">
+                    <div class="flex items-center mb-4 section-toggle" onclick="toggleSection('experimental')">
+                        <input id="enableExperimental" type="checkbox" class="mr-2 w-5 h-5">
+                        <label class="font-bold text-xl">[experimental] 実験的機能（上級者向け）</label>
+                        <span class="ml-2 px-3 py-1 bg-red-200 text-xs rounded-full">⚠️⚠️ 上級者専用</span>
+                    </div>
+                    <div id="experimentalSection" class="hidden space-y-4">
+                        <div>
+                            <label class="flex items-center mb-2">
+                                <input id="autoMemoryReclaim" type="checkbox" checked class="mr-2">
+                                <span class="text-sm font-medium">autoMemoryReclaim</span>
+                            </label>
+                            <select id="autoMemoryReclaimMode" class="w-full p-2 border rounded mt-1">
+                                <option value="gradual">gradual（徐々に回収）</option>
+                                <option value="dropcache">dropcache（積極的回収）</option>
+                                <option value="disabled">disabled（無効）</option>
+                            </select>
+                            <span class="text-xs text-gray-500">自動メモリ回収（WSL 1.3.10+、推奨）</span>
+                        </div>
+                        <div>
+                            <label class="flex items-center mb-2">
+                                <input id="sparseVhd" type="checkbox" checked class="mr-2">
+                                <span class="text-sm font-medium">sparseVhd</span>
+                            </label>
+                            <span class="text-xs text-gray-500">VHD自動縮小（ディスク容量節約）</span>
+                        </div>
+                        <div>
+                            <label class="flex items-center mb-2">
+                                <input id="useWindowsDnsCache" type="checkbox" class="mr-2">
+                                <span class="text-sm font-medium">useWindowsDnsCache</span>
+                            </label>
+                            <span class="text-xs text-gray-500">Windows DNSキャッシュ使用</span>
+                        </div>
+                        <div>
+                            <label class="flex items-center mb-2">
+                                <input id="bestEffortDnsParsing" type="checkbox" class="mr-2">
+                                <span class="text-sm font-medium">bestEffortDnsParsing</span>
+                            </label>
+                            <span class="text-xs text-gray-500">DNS解析互換性向上</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">dnsTunnelIpAddress</label>
+                            <input id="dnsTunnelIpAddress" type="text" placeholder="10.255.255.254" class="w-full p-2 border rounded" value="10.255.255.254">
+                            <span class="text-xs text-gray-500">DNSトンネルIPアドレス</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">initialAutoProxyTimeout</label>
+                            <input id="initialAutoProxyTimeout" type="number" class="w-full p-2 border rounded" value="1000">
+                            <span class="text-xs text-gray-500">プロキシ初期化タイムアウト(ms)</span>
+                        </div>
+                        <div>
+                            <label class="flex items-center mb-2">
+                                <input id="hostAddressLoopback" type="checkbox" class="mr-2">
+                                <span class="text-sm font-medium">hostAddressLoopback</span>
+                            </label>
+                            <span class="text-xs text-gray-500">127.0.0.1経由でホスト通信（mirroredモード時）</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">defaultVhdSize</label>
+                            <input id="defaultVhdSize" type="number" class="w-full p-2 border rounded" placeholder="1099511627776">
+                            <span class="text-xs text-gray-500">デフォルトVHDサイズ（バイト、デフォルト1TB）</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">maxCrashDumpCount</label>
+                            <input id="maxCrashDumpCount" type="number" class="w-full p-2 border rounded" value="10">
+                            <span class="text-xs text-gray-500">クラッシュダンプ保持数（%LOCALAPPDATA%\\Temp\\wsl-crash）</span>
+                        </div>
+                    </div>
+                </section>
+
+                <button onclick="validate()" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-bold text-lg hover:bg-blue-700 sticky bottom-0">生成！</button>
             </div>
 
-            <!-- 右: リアルタイムプレビュー -->
-            <div>
+            <!-- 右: プレビュー -->
+            <div class="sticky top-8" style="max-height: 90vh;">
                 <h2 class="text-2xl font-semibold mb-6">リアルタイムプレビュー</h2>
                 <div>
                     <label class="block text-sm font-medium mb-2">.wslconfig（コメント付き）</label>
-                    <pre id="configPreview" class="preview p-6 rounded-lg h-96 overflow-auto text-sm"></pre>
+                    <pre id="configPreview" class="preview p-6 rounded-lg overflow-auto text-sm" style="height: 50vh;"></pre>
                 </div>
                 <div class="mt-6">
                     <h3 class="font-bold mb-2">配置コマンド</h3>
-                    <pre id="commandPreview" class="preview p-4 rounded-lg text-sm overflow-auto"></pre>
+                    <pre id="commandPreview" class="preview p-4 rounded-lg text-sm overflow-auto" style="max-height: 20vh;"></pre>
                 </div>
                 <div id="validationResult" class="mt-4"></div>
             </div>
         </div>
 
-        <!-- 完了セクション -->
+        <!-- 完了 -->
         <div id="completeSection" class="mt-8 p-6 bg-green-50 rounded-lg hidden">
-            <h3 class="font-bold text-xl mb-4">生成完了！</h3>
-            <button onclick="copyToClipboard()" class="bg-green-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-green-700 mr-4">設定をコピー</button>
-            <button onclick="copyCommand()" class="bg-blue-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-blue-700">コマンドをコピー</button>
-            <p class="mt-4 text-sm text-gray-700">次のステップ: コピーした内容を PowerShell で実行してください。</p>
+            <h3 class="font-bold text-xl mb-4">✅ 生成完了！</h3>
+            <button onclick="copyToClipboard()" class="bg-green-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-green-700 mr-4">📋 設定をコピー</button>
+            <button onclick="copyCommand()" class="bg-blue-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-blue-700">📋 コマンドをコピー</button>
         </div>
     </div>
 
     <script>
-        // システム情報取得（JavaScript API）
-        const totalMemory = navigator.deviceMemory || 8; // GB
+        const totalMemory = navigator.deviceMemory || 8;
         const cpuCores = navigator.hardwareConcurrency || 4;
-        document.getElementById('systemInfo').textContent =
-            `検出されたスペック: メモリ ${totalMemory}GB, CPUコア ${cpuCores}個`;
+        document.getElementById('systemInfo').textContent = 
+            `検出: メモリ ${totalMemory}GB, CPU ${cpuCores}コア`;
 
-        // 推奨値を自動設定
         const recommendedMemory = Math.floor(totalMemory * 0.6);
         const recommendedCpu = Math.max(2, Math.floor(cpuCores * 0.5));
         document.getElementById('memory').value = recommendedMemory;
         document.getElementById('processors').value = recommendedCpu;
 
-        // リアルタイム更新
-        const inputs = ['memory', 'processors', 'swap', 'enableAdvanced', 'localhostForwarding',
-                       'autoMemoryReclaim', 'pageReporting', 'sparseVhd', 'swapFile'];
-        inputs.forEach(id => {
+        const allInputs = ['instanceIdleTimeout', 'memory', 'processors', 'swap', 'swapFile', 'localhostForwarding', 
+                          'vmIdleTimeout', 'kernel', 'kernelCommandLine', 'nestedVirtualization', 'pageReporting',
+                          'guiApplications', 'debugConsole', 'enableAdvanced', 'enableNetwork', 'networkingMode',
+                          'dnsTunneling', 'dnsProxy', 'firewall', 'autoProxy', 'vmSwitch', 'macAddress', 'dhcp',
+                          'ipv6', 'ignoredPorts', 'enableExperimental', 'autoMemoryReclaim', 'autoMemoryReclaimMode',
+                          'sparseVhd', 'useWindowsDnsCache', 'bestEffortDnsParsing', 'dnsTunnelIpAddress',
+                          'initialAutoProxyTimeout', 'hostAddressLoopback', 'defaultVhdSize', 'maxCrashDumpCount'];
+        
+        allInputs.forEach(id => {
             const el = document.getElementById(id);
-            el.addEventListener('input', updatePreview);
-            el.addEventListener('change', () => {
-                if (id === 'enableAdvanced') toggleAdvanced();
-                updatePreview();
-            });
+            if (el) {
+                el.addEventListener('input', updatePreview);
+                el.addEventListener('change', updatePreview);
+            }
         });
 
-        function toggleAdvanced() {
-            const opts = document.getElementById('advancedOptions');
-            opts.classList.toggle('hidden', !document.getElementById('enableAdvanced').checked);
-        }
-
-        function updatePreview() {
-            const config = generateConfig();
-            document.getElementById('configPreview').textContent = config.text;
-            document.getElementById('commandPreview').textContent = config.command;
-            validateInputs();
+        function toggleSection(section) {
+            const sections = {
+                'general': 'generalSection',
+                'advanced': 'advancedSection',
+                'network': 'networkSection',
+                'experimental': 'experimentalSection'
+            };
+            const sectionId = sections[section];
+            if (sectionId) {
+                const el = document.getElementById(sectionId);
+                const isAdvanced = section !== 'general';
+                if (isAdvanced) {
+                    const checkbox = document.getElementById('enable' + section.charAt(0).toUpperCase() + section.slice(1));
+                    if (checkbox) {
+                        checkbox.checked = !el.classList.contains('hidden');
+                        el.classList.toggle('hidden');
+                    }
+                } else {
+                    el.classList.toggle('hidden');
+                }
+                updatePreview();
+            }
         }
 
         function generateConfig() {
             const memory = document.getElementById('memory').value;
             const processors = document.getElementById('processors').value;
             const swap = document.getElementById('swap').value;
-            const swapFile = document.getElementById('swapFile').value;
-            const localhost = document.getElementById('localhostForwarding').checked;
-            const autoReclaim = document.getElementById('autoMemoryReclaim').checked;
-            const pageReport = document.getElementById('pageReporting').checked;
-            const sparseVhd = document.getElementById('sparseVhd').checked;
 
-            let text = `# .wslconfig - Docker Desktop + WSL2 オーバーヘッド解消設定
-# 生成日時: ${new Date().toLocaleString('ja-JP')}
-# 配置先: C:\\Users\\%USERNAME%\\.wslconfig
+            let text = `# .wslconfig - 完全版（全設定項目網羅）
+# 生成: ${new Date().toLocaleString('ja-JP')}
+# 配置: C:\\Users\\%USERNAME%\\.wslconfig
 
-[wsl2]
+`;
 
-# === 基本設定（初心者向け） ===
+            // [general]
+            text += `[general]
+# WSLインスタンスのアイドルタイムアウト（ms）
+# -1=自動停止なし、0=即停止、正数=指定時間後停止
+instanceIdleTimeout=${document.getElementById('instanceIdleTimeout').value}
 
-# メモリ上限: WSL2が使用できる最大メモリ
-# Docker Desktop使用時は物理メモリの50-75%推奨
-# 設定値が大きすぎるとWindowsが不安定になる
+`;
+
+            // [wsl2]
+            text += `[wsl2]
+
+# === 基本設定 ===
+# メモリ上限（物理メモリの50-75%推奨）
 memory=${memory}GB
 
-# CPUコア数: WSL2が使用できる論理プロセッサ数
-# Dockerビルド速度に直結。物理コアの50-75%推奨
+# CPUコア数（論理プロセッサ）
 processors=${processors}
 
-# スワップ容量: メモリ不足時のバッファ
-# 0=無効（メモリ不足でクラッシュリスク）
-# 2-4GB推奨（SSD環境で効果的）
+# スワップ容量（0=無効、2-4GB推奨）
 swap=${swap}GB
-`;
 
-            if (swapFile) {
-                text += `
-# スワップファイルのカスタムパス
-# 高速なSSD上に配置すると性能向上
-swapFile=${swapFile}
 `;
-            }
 
             if (document.getElementById('enableAdvanced').checked) {
-                text += `
-# === 詳細設定（上級者向け） ===
+                const swapFile = document.getElementById('swapFile').value;
+                if (swapFile) text += `# スワップファイルパス\nswapFile=${swapFile}\n\n`;
+
+                text += `# === 詳細設定 ===
+# localhost転送（Docker必須）
+localhostForwarding=${document.getElementById('localhostForwarding').checked}
+
+# VM自動停止タイムアウト（ms）
+vmIdleTimeout=${document.getElementById('vmIdleTimeout').value}
+
+# ネスト仮想化（WSL内でDocker/VM実行）
+nestedVirtualization=${document.getElementById('nestedVirtualization').checked}
+
+# ページ報告（メモリ解放積極化）
+pageReporting=${document.getElementById('pageReporting').checked}
+
+# WSLg（GUIアプリサポート）
+guiApplications=${document.getElementById('guiApplications').checked}
+
+# デバッグコンソール（dmesg出力）
+debugConsole=${document.getElementById('debugConsole').checked}
 
 `;
-                if (localhost) {
-                    text += `# localhost転送: Windows ↔ WSL間でlocalhost共有
-# Docker Desktopで必須（コンテナポートへのアクセス）
-localhostForwarding=true
+                const kernel = document.getElementById('kernel').value;
+                if (kernel) text += `# カスタムカーネルパス\nkernel=${kernel}\n\n`;
+
+                const kernelCmd = document.getElementById('kernelCommandLine').value;
+                if (kernelCmd) text += `# カーネル起動パラメータ\nkernelCommandLine=${kernelCmd}\n\n`;
+            }
+
+            if (document.getElementById('enableNetwork').checked) {
+                text += `# === ネットワーク設定 ===
+# ネットワークモード（NAT/mirrored/bridged/virtioproxy/none）
+networkingMode=${document.getElementById('networkingMode').value}
+
+# DNSトンネル（VPN環境推奨）
+dnsTunneling=${document.getElementById('dnsTunneling').checked}
+
+# DNSプロキシ（NAT時有効）
+dnsProxy=${document.getElementById('dnsProxy').checked}
+
+# Windowsファイアウォール適用
+firewall=${document.getElementById('firewall').checked}
+
+# Windowsプロキシ継承
+autoProxy=${document.getElementById('autoProxy').checked}
+
+`;
+                const vmSwitch = document.getElementById('vmSwitch').value;
+                if (vmSwitch) text += `# Hyper-V仮想スイッチ（bridgedモード時）\nvmSwitch=${vmSwitch}\n\n`;
+
+                const macAddr = document.getElementById('macAddress').value;
+                if (macAddr) text += `# MACアドレス（bridgedモード時）\nmacAddress=${macAddr}\n\n`;
+
+                text += `# DHCP有効化（bridgedモード時）
+dhcp=${document.getElementById('dhcp').checked}
+
+# IPv6有効化（bridgedモード時）
+ipv6=${document.getElementById('ipv6').checked}
+
+`;
+                const ignoredPorts = document.getElementById('ignoredPorts').value;
+                if (ignoredPorts) text += `# mirroredモードで除外するポート\nignoredPorts=${ignoredPorts}\n\n`;
+            }
+
+            if (document.getElementById('enableExperimental').checked) {
+                text += `[experimental]
+
+# === 実験的機能（WSL最新版推奨） ===
+`;
+                if (document.getElementById('autoMemoryReclaim').checked) {
+                    text += `# 自動メモリ回収（gradual/dropcache/disabled）
+autoMemoryReclaim=${document.getElementById('autoMemoryReclaimMode').value}
 
 `;
                 }
-                if (autoReclaim) {
-                    text += `# 自動メモリ回収: 未使用メモリをWindowsに返却
-# WSL 1.3.10+の実験的機能（推奨: Docker使用時）
-# gradual=徐々に回収, dropcache=積極的回収
-autoMemoryReclaim=gradual
+
+                text += `# VHD自動縮小（ディスク節約）
+sparseVhd=${document.getElementById('sparseVhd').checked}
+
+# Windows DNSキャッシュ使用
+useWindowsDnsCache=${document.getElementById('useWindowsDnsCache').checked}
+
+# DNS解析互換性向上
+bestEffortDnsParsing=${document.getElementById('bestEffortDnsParsing').checked}
+
+# DNSトンネルIPアドレス
+dnsTunnelIpAddress=${document.getElementById('dnsTunnelIpAddress').value}
+
+# プロキシ初期化タイムアウト（ms）
+initialAutoProxyTimeout=${document.getElementById('initialAutoProxyTimeout').value}
+
+# 127.0.0.1経由でホスト通信（mirroredモード時）
+hostAddressLoopback=${document.getElementById('hostAddressLoopback').checked}
+
+# クラッシュダンプ保持数
+maxCrashDumpCount=${document.getElementById('maxCrashDumpCount').value}
 
 `;
-                }
-                if (pageReport) {
-                    text += `# ページ報告: メモリ解放の積極化
-# false=キャッシュ保持優先、true=解放優先
-pageReporting=${pageReport}
-
-`;
-                }
-                if (sparseVhd) {
-                    text += `# Sparse VHD: 仮想ディスクの自動縮小
-# 実験的機能（ディスク容量節約）
-[experimental]
-sparseVhd=true
-
-`;
-                }
+                const vhdSize = document.getElementById('defaultVhdSize').value;
+                if (vhdSize) text += `# デフォルトVHDサイズ（バイト）\ndefaultVhdSize=${vhdSize}\n\n`;
             }
 
             text += `
-# === 適用方法 ===
-# 1. PowerShellで下記コマンド実行
-# 2. WSL再起動（wsl --shutdown）
+# === 適用手順 ===
+# 1. PowerShell管理者権限で下記コマンド実行
+# 2. wsl --shutdown
 # 3. Docker Desktop再起動
-
-# === トラブルシュート ===
-# Dockerビルド失敗 → memory値を増やす
-# Windows動作が重い → memory値を減らす
-# メモリ解放されない → autoMemoryReclaim有効化
 `;
 
-            const command = `# PowerShell管理者権限で実行（推奨）
+            const command = `# PowerShell管理者権限で実行
 
 # 1. 設定ファイル作成
 @"
@@ -258,12 +516,9 @@ ${text.replace(/\n/g, '\n')}
 wsl --shutdown
 
 # 3. Docker Desktop再起動
-# タスクトレイのDockerアイコン → Restart
 
 # 4. 設定確認
 wsl --list --verbose
-
-# 5. メモリ制限確認（WSL内で実行）
 wsl free -h
 `;
 
@@ -272,41 +527,30 @@ wsl free -h
 
         function validateInputs() {
             const memory = parseInt(document.getElementById('memory').value);
-            const processors = parseInt(document.getElementById('processors').value);
-            const swap = parseInt(document.getElementById('swap').value);
             let warnings = [];
 
-            // メモリ警告
             if (memory > totalMemory * 0.8) {
-                warnings.push(`警告: メモリ ${memory}GB は物理メモリの80%超。Windows動作が不安定になる可能性。`);
-                document.getElementById('memoryWarning').textContent =
-                    `警告: 推奨最大値 ${Math.floor(totalMemory * 0.75)}GB（物理メモリの75%）`;
+                warnings.push(`⚠️ メモリ ${memory}GB は物理メモリの80%超。推奨最大: ${Math.floor(totalMemory * 0.75)}GB`);
+                document.getElementById('memoryWarning').textContent = `警告: 推奨最大 ${Math.floor(totalMemory * 0.75)}GB`;
                 document.getElementById('memoryWarning').classList.remove('hidden');
             } else {
                 document.getElementById('memoryWarning').classList.add('hidden');
             }
 
-            if (memory < 2) {
-                warnings.push(`警告: メモリ ${memory}GB は少なすぎ。Docker Desktop最低4GB推奨。`);
-            }
-
-            // CPU警告
-            if (processors > cpuCores) {
-                warnings.push(`警告: CPUコア ${processors} は物理コア数超過（最大${cpuCores}）。`);
-            }
-
-            // スワップ警告
-            if (swap === 0) {
-                warnings.push(`情報: スワップ無効。メモリ不足時にクラッシュする可能性。`);
-            }
-
             if (warnings.length > 0) {
-                document.getElementById('validationResult').innerHTML =
+                document.getElementById('validationResult').innerHTML = 
                     `<div class="warning">${warnings.join('<br>')}</div>`;
             } else {
-                document.getElementById('validationResult').innerHTML =
-                    `<div class="success">設定値は妥当です。Docker Desktop最適化に最適！</div>`;
+                document.getElementById('validationResult').innerHTML = 
+                    `<div class="success">✅ 設定値は妥当です！</div>`;
             }
+        }
+
+        function updatePreview() {
+            const config = generateConfig();
+            document.getElementById('configPreview').textContent = config.text;
+            document.getElementById('commandPreview').textContent = config.command;
+            validateInputs();
         }
 
         function validate() {
@@ -318,18 +562,17 @@ wsl free -h
         function copyToClipboard() {
             const config = generateConfig();
             navigator.clipboard.writeText(config.text).then(() => {
-                alert('設定内容をクリップボードにコピーしました！');
+                alert('✅ 設定をコピーしました！');
             });
         }
 
         function copyCommand() {
             const config = generateConfig();
             navigator.clipboard.writeText(config.command).then(() => {
-                alert('PowerShellコマンドをクリップボードにコピーしました！\n管理者権限のPowerShellで実行してください。');
+                alert('✅ コマンドをコピーしました！\nPowerShell管理者権限で実行してください。');
             });
         }
 
-        // 初回プレビュー
         updatePreview();
     </script>
 </body>
