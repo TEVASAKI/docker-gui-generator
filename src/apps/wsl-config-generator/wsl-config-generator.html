@@ -72,7 +72,7 @@
                     <div class="flex items-center mb-4 section-toggle" onclick="toggleSection('advanced')">
                         <input id="enableAdvanced" type="checkbox" class="mr-2 w-5 h-5">
                         <label class="font-bold text-xl">[wsl2] 詳細設定（中級者向け）</label>
-                        <span class="ml-2 px-3 py-1 bg-yellow-200 text-xs rounded-full">⚠️ 中級者向け</span>
+                        <span class="ml-2 px-3 py-1 bg-yellow-200 text-xs rounded-full">中級者向け</span>
                     </div>
                     <div id="advancedSection" class="hidden space-y-4">
                         <div>
@@ -138,7 +138,7 @@
                     <div class="flex items-center mb-4 section-toggle" onclick="toggleSection('network')">
                         <input id="enableNetwork" type="checkbox" class="mr-2 w-5 h-5">
                         <label class="font-bold text-xl">[wsl2] ネットワーク設定（中級者向け）</label>
-                        <span class="ml-2 px-3 py-1 bg-yellow-200 text-xs rounded-full">⚠️ 中級者向け</span>
+                        <span class="ml-2 px-3 py-1 bg-yellow-200 text-xs rounded-full">中級者向け</span>
                     </div>
                     <div id="networkSection" class="hidden space-y-4">
                         <div>
@@ -217,7 +217,7 @@
                     <div class="flex items-center mb-4 section-toggle" onclick="toggleSection('experimental')">
                         <input id="enableExperimental" type="checkbox" class="mr-2 w-5 h-5">
                         <label class="font-bold text-xl">[experimental] 実験的機能（上級者向け）</label>
-                        <span class="ml-2 px-3 py-1 bg-red-200 text-xs rounded-full">⚠️⚠️ 上級者専用</span>
+                        <span class="ml-2 px-3 py-1 bg-red-200 text-xs rounded-full">上級者専用</span>
                     </div>
                     <div id="experimentalSection" class="hidden space-y-4">
                         <div>
@@ -303,9 +303,9 @@
 
         <!-- 完了 -->
         <div id="completeSection" class="mt-8 p-6 bg-green-50 rounded-lg hidden">
-            <h3 class="font-bold text-xl mb-4">✅ 生成完了！</h3>
-            <button onclick="copyToClipboard()" class="bg-green-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-green-700 mr-4">📋 設定をコピー</button>
-            <button onclick="copyCommand()" class="bg-blue-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-blue-700">📋 コマンドをコピー</button>
+            <h3 class="font-bold text-xl mb-4">生成完了！</h3>
+            <button onclick="copyToClipboard()" class="bg-green-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-green-700 mr-4">設定をコピー</button>
+            <button onclick="copyCommand()" class="bg-blue-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-blue-700">コマンドをコピー</button>
         </div>
     </div>
 
@@ -530,7 +530,7 @@ wsl free -h
             let warnings = [];
 
             if (memory > totalMemory * 0.8) {
-                warnings.push(`⚠️ メモリ ${memory}GB は物理メモリの80%超。推奨最大: ${Math.floor(totalMemory * 0.75)}GB`);
+                warnings.push(`メモリ ${memory}GB は物理メモリの80%超。推奨最大: ${Math.floor(totalMemory * 0.75)}GB`);
                 document.getElementById('memoryWarning').textContent = `警告: 推奨最大 ${Math.floor(totalMemory * 0.75)}GB`;
                 document.getElementById('memoryWarning').classList.remove('hidden');
             } else {
@@ -542,7 +542,7 @@ wsl free -h
                     `<div class="warning">${warnings.join('<br>')}</div>`;
             } else {
                 document.getElementById('validationResult').innerHTML = 
-                    `<div class="success">✅ 設定値は妥当です！</div>`;
+                    `<div class="success">設定値は妥当です！</div>`;
             }
         }
 
@@ -562,14 +562,14 @@ wsl free -h
         function copyToClipboard() {
             const config = generateConfig();
             navigator.clipboard.writeText(config.text).then(() => {
-                alert('✅ 設定をコピーしました！');
+                alert('設定をコピーしました！');
             });
         }
 
         function copyCommand() {
             const config = generateConfig();
             navigator.clipboard.writeText(config.command).then(() => {
-                alert('✅ コマンドをコピーしました！\nPowerShell管理者権限で実行してください。');
+                alert('コマンドをコピーしました！\nPowerShell管理者権限で実行してください。');
             });
         }
 
