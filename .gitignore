@@ -1,4 +1,10 @@
-# OS
+# セキュリティ関連
+.env
+*.pem
+*.key
+id_rsa
+
+# OS関連
 .DS_Store
 Thumbs.db
 desktop.ini
@@ -10,16 +16,19 @@ desktop.ini
 *.swo
 *~
 
-# Temporary files
-*.tmp
-*.log
-*.bak
-
-# Node modules (if any)
+# 依存関係・ビルド
 node_modules/
 package-lock.json
 yarn.lock
-
-# Build outputs (if any)
 dist/
 build/
+__pycache__/
+*.pyc
+
+# ログ・DB
+*.log
+*.sqlite3
+*.bak
+
+# Temporary files
+*.tmp
