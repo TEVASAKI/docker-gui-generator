@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>.wslconfig GUI Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .preview { background: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', 'Courier New', monospace; border-left: 4px solid #007acc; }
+        .advanced { border: 2px dashed #ffc107; background: #fff3cd; }
+        .warning { background: #fff3cd; border-left: 4px solid #ff9800; padding: 12px; margin: 10px 0; }
+        .success { background: #d4edda; border-left: 4px solid #28a745; padding: 12px; margin: 10px 0; }
+    </style>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-4xl font-bold text-center mb-4 text-blue-600">.wslconfig GUI Generator</h1>
+        <p class="text-center text-lg mb-2 text-gray-700">Docker Desktop + WSL2 オーバーヘッド解消特化</p>
+        <div id="systemInfo" class="text-center text-sm text-gray-600 mb-8"></div>
+
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- 左: 入力フォーム -->
+            <div>
+                <h2 class="text-2xl font-semibold mb-6">設定入力</h2>
+
+                <!-- 基本設定 -->
+                <section class="mb-6 p-6 bg-white rounded-lg shadow">
+                    <h3 class="font-bold mb-4 text-xl flex items-center">
+                        <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-2">1</span>
+                        基本設定（初心者向け）
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">メモリ上限</label>
+                            <input id="memory" type="number" min="1" max="256" class="w-full p-3 border rounded-lg" value="8">
+                            <span class="text-xs text-gray-500">GB（推奨: 物理メモリの50-75%）</span>
+                            <div id="memoryWarning" class="warning hidden mt-2"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">CPUコア数</label>
+                            <input id="processors" type="number" min="1" max="128" class="w-full p-3 border rounded-lg" value="4">
+                            <span class="text-xs text-gray-500">推奨: 物理コアの50-75%</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">スワップ容量</label>
+                            <input id="swap" type="number" min="0" max="64" class="w-full p-3 border rounded-lg" value="2">
+                            <span class="text-xs text-gray-500">GB（0=無効、推奨: 2-4GB）</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 詳細設定 -->
+                <section class="mb-6 p-6 advanced rounded-lg shadow">
+                    <div class="flex items-center mb-4">
+                        <input id="enableAdvanced" type="checkbox" class="mr-2 w-5 h-5">
+                        <label class="font-bold text-xl">詳細設定（上級者向け）</label>
+                        <span class="ml-2 px-3 py-1 bg-yellow-200 text-xs rounded-full">警告: 上級者向け</span>
+                    </div>
+                    <div id="advancedOptions" class="hidden space-y-4">
+                        <div>
+                            <label class="flex items-center mb-2">
+                                <input id="localhostForwarding" type="checkbox" checked class="mr-2">
+                                <span class="text-sm font-medium">localhostForwarding（Docker必須）</span>
+                            </label>
+                            <span class="text-xs text-gray-500">Windows ↔ WSL間のlocalhost通信を有効化</span>
+                        </div>
+                        <div>
+                            <label class="flex items-center mb-2">
+                                <input id="autoMemoryReclaim" type="checkbox" checked class="mr-2">
+                                <span class="text-sm font-medium">autoMemoryReclaim（推奨）</span>
+                            </label>
+                            <span class="text-xs text-gray-500">未使用メモリをWindowsに自動返却（WSL 1.3.10+）</span>
+                        </div>
+                        <div>
+                            <label class="flex items-center mb-2">
+                                <input id="pageReporting" type="checkbox" class="mr-2">
+                                <span class="text-sm font-medium">pageReporting（メモリ最適化）</span>
+                            </label>
+                            <span class="text-xs text-gray-500">ページ報告でメモリ解放を積極化</span>
+                        </div>
+                        <div>
+                            <label class="flex items-center mb-2">
+                                <input id="sparseVhd" type="checkbox" checked class="mr-2">
+                                <span class="text-sm font-medium">sparseVhd（ディスク最適化）</span>
+                            </label>
+                            <span class="text-xs text-gray-500">VHDディスク自動縮小（実験的機能）</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">swapFile（カスタムパス）</label>
+                            <input id="swapFile" type="text" placeholder="C:\\temp\\wsl-swap.vhdx" class="w-full p-2 border rounded">
+                            <span class="text-xs text-gray-500">空欄=デフォルト</span>
+                        </div>
+                    </div>
+                </section>
+
+                <button onclick="validate()" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-bold text-lg hover:bg-blue-700">生成！</button>
+            </div>
+
+            <!-- 右: リアルタイムプレビュー -->
+            <div>
+                <h2 class="text-2xl font-semibold mb-6">リアルタイムプレビュー</h2>
+                <div>
+                    <label class="block text-sm font-medium mb-2">.wslconfig（コメント付き）</label>
+                    <pre id="configPreview" class="preview p-6 rounded-lg h-96 overflow-auto text-sm"></pre>
+                </div>
+                <div class="mt-6">
+                    <h3 class="font-bold mb-2">配置コマンド</h3>
+                    <pre id="commandPreview" class="preview p-4 rounded-lg text-sm overflow-auto"></pre>
+                </div>
+                <div id="validationResult" class="mt-4"></div>
+            </div>
+        </div>
+
+        <!-- 完了セクション -->
+        <div id="completeSection" class="mt-8 p-6 bg-green-50 rounded-lg hidden">
+            <h3 class="font-bold text-xl mb-4">生成完了！</h3>
+            <button onclick="copyToClipboard()" class="bg-green-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-green-700 mr-4">設定をコピー</button>
+            <button onclick="copyCommand()" class="bg-blue-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-blue-700">コマンドをコピー</button>
+            <p class="mt-4 text-sm text-gray-700">次のステップ: コピーした内容を PowerShell で実行してください。</p>
+        </div>
+    </div>
+
+    <script>
+        // システム情報取得（JavaScript API）
+        const totalMemory = navigator.deviceMemory || 8; // GB
+        const cpuCores = navigator.hardwareConcurrency || 4;
+        document.getElementById('systemInfo').textContent =
+            `検出されたスペック: メモリ ${totalMemory}GB, CPUコア ${cpuCores}個`;
+
+        // 推奨値を自動設定
+        const recommendedMemory = Math.floor(totalMemory * 0.6);
+        const recommendedCpu = Math.max(2, Math.floor(cpuCores * 0.5));
+        document.getElementById('memory').value = recommendedMemory;
+        document.getElementById('processors').value = recommendedCpu;
+
+        // リアルタイム更新
+        const inputs = ['memory', 'processors', 'swap', 'enableAdvanced', 'localhostForwarding',
+                       'autoMemoryReclaim', 'pageReporting', 'sparseVhd', 'swapFile'];
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+            el.addEventListener('input', updatePreview);
+            el.addEventListener('change', () => {
+                if (id === 'enableAdvanced') toggleAdvanced();
+                updatePreview();
+            });
+        });
+
+        function toggleAdvanced() {
+            const opts = document.getElementById('advancedOptions');
+            opts.classList.toggle('hidden', !document.getElementById('enableAdvanced').checked);
+        }
+
+        function updatePreview() {
+            const config = generateConfig();
+            document.getElementById('configPreview').textContent = config.text;
+            document.getElementById('commandPreview').textContent = config.command;
+            validateInputs();
+        }
+
+        function generateConfig() {
+            const memory = document.getElementById('memory').value;
+            const processors = document.getElementById('processors').value;
+            const swap = document.getElementById('swap').value;
+            const swapFile = document.getElementById('swapFile').value;
+            const localhost = document.getElementById('localhostForwarding').checked;
+            const autoReclaim = document.getElementById('autoMemoryReclaim').checked;
+            const pageReport = document.getElementById('pageReporting').checked;
+            const sparseVhd = document.getElementById('sparseVhd').checked;
+
+            let text = `# .wslconfig - Docker Desktop + WSL2 オーバーヘッド解消設定
+# 生成日時: ${new Date().toLocaleString('ja-JP')}
+# 配置先: C:\\Users\\%USERNAME%\\.wslconfig
+
+[wsl2]
+
+# === 基本設定（初心者向け） ===
+
+# メモリ上限: WSL2が使用できる最大メモリ
+# Docker Desktop使用時は物理メモリの50-75%推奨
+# 設定値が大きすぎるとWindowsが不安定になる
+memory=${memory}GB
+
+# CPUコア数: WSL2が使用できる論理プロセッサ数
+# Dockerビルド速度に直結。物理コアの50-75%推奨
+processors=${processors}
+
+# スワップ容量: メモリ不足時のバッファ
+# 0=無効（メモリ不足でクラッシュリスク）
+# 2-4GB推奨（SSD環境で効果的）
+swap=${swap}GB
+`;
+
+            if (swapFile) {
+                text += `
+# スワップファイルのカスタムパス
+# 高速なSSD上に配置すると性能向上
+swapFile=${swapFile}
+`;
+            }
+
+            if (document.getElementById('enableAdvanced').checked) {
+                text += `
+# === 詳細設定（上級者向け） ===
+
+`;
+                if (localhost) {
+                    text += `# localhost転送: Windows ↔ WSL間でlocalhost共有
+# Docker Desktopで必須（コンテナポートへのアクセス）
+localhostForwarding=true
+
+`;
+                }
+                if (autoReclaim) {
+                    text += `# 自動メモリ回収: 未使用メモリをWindowsに返却
+# WSL 1.3.10+の実験的機能（推奨: Docker使用時）
+# gradual=徐々に回収, dropcache=積極的回収
+autoMemoryReclaim=gradual
+
+`;
+                }
+                if (pageReport) {
+                    text += `# ページ報告: メモリ解放の積極化
+# false=キャッシュ保持優先、true=解放優先
+pageReporting=${pageReport}
+
+`;
+                }
+                if (sparseVhd) {
+                    text += `# Sparse VHD: 仮想ディスクの自動縮小
+# 実験的機能（ディスク容量節約）
+[experimental]
+sparseVhd=true
+
+`;
+                }
+            }
+
+            text += `
+# === 適用方法 ===
+# 1. PowerShellで下記コマンド実行
+# 2. WSL再起動（wsl --shutdown）
+# 3. Docker Desktop再起動
+
+# === トラブルシュート ===
+# Dockerビルド失敗 → memory値を増やす
+# Windows動作が重い → memory値を減らす
+# メモリ解放されない → autoMemoryReclaim有効化
+`;
+
+            const command = `# PowerShell管理者権限で実行（推奨）
+
+# 1. 設定ファイル作成
+@"
+${text.replace(/\n/g, '\n')}
+"@ | Out-File -FilePath "$env:USERPROFILE\\.wslconfig" -Encoding UTF8
+
+# 2. WSL完全停止
+wsl --shutdown
+
+# 3. Docker Desktop再起動
+# タスクトレイのDockerアイコン → Restart
+
+# 4. 設定確認
+wsl --list --verbose
+
+# 5. メモリ制限確認（WSL内で実行）
+wsl free -h
+`;
+
+            return { text, command };
+        }
+
+        function validateInputs() {
+            const memory = parseInt(document.getElementById('memory').value);
+            const processors = parseInt(document.getElementById('processors').value);
+            const swap = parseInt(document.getElementById('swap').value);
+            let warnings = [];
+
+            // メモリ警告
+            if (memory > totalMemory * 0.8) {
+                warnings.push(`警告: メモリ ${memory}GB は物理メモリの80%超。Windows動作が不安定になる可能性。`);
+                document.getElementById('memoryWarning').textContent =
+                    `警告: 推奨最大値 ${Math.floor(totalMemory * 0.75)}GB（物理メモリの75%）`;
+                document.getElementById('memoryWarning').classList.remove('hidden');
+            } else {
+                document.getElementById('memoryWarning').classList.add('hidden');
+            }
+
+            if (memory < 2) {
+                warnings.push(`警告: メモリ ${memory}GB は少なすぎ。Docker Desktop最低4GB推奨。`);
+            }
+
+            // CPU警告
+            if (processors > cpuCores) {
+                warnings.push(`警告: CPUコア ${processors} は物理コア数超過（最大${cpuCores}）。`);
+            }
+
+            // スワップ警告
+            if (swap === 0) {
+                warnings.push(`情報: スワップ無効。メモリ不足時にクラッシュする可能性。`);
+            }
+
+            if (warnings.length > 0) {
+                document.getElementById('validationResult').innerHTML =
+                    `<div class="warning">${warnings.join('<br>')}</div>`;
+            } else {
+                document.getElementById('validationResult').innerHTML =
+                    `<div class="success">設定値は妥当です。Docker Desktop最適化に最適！</div>`;
+            }
+        }
+
+        function validate() {
+            validateInputs();
+            document.getElementById('completeSection').classList.remove('hidden');
+            document.getElementById('completeSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copyToClipboard() {
+            const config = generateConfig();
+            navigator.clipboard.writeText(config.text).then(() => {
+                alert('設定内容をクリップボードにコピーしました！');
+            });
+        }
+
+        function copyCommand() {
+            const config = generateConfig();
+            navigator.clipboard.writeText(config.command).then(() => {
+                alert('PowerShellコマンドをクリップボードにコピーしました！\n管理者権限のPowerShellで実行してください。');
+            });
+        }
+
+        // 初回プレビュー
+        updatePreview();
+    </script>
+</body>
+</html>

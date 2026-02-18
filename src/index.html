@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker GUI Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .preview { background: #f8f9fa; border-left: 4px solid #0d6efd; font-family: 'SF Mono', Monaco, Menlo, monospace; }
+        .advanced { border: 2px dashed #ffc107; background: #fff3cd; }
+    </style>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-4xl font-bold text-center mb-8 text-blue-600">Docker GUI Generator</h1>
+        <p class="text-center text-lg mb-12 text-gray-700">初心者向けDockerfile + docker-compose.yml生成ツール。リアルタイムプレビュー付き！</p>
+
+        <!-- フォーム -->
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- 左: 入力フォーム -->
+            <div>
+                <h2 class="text-2xl font-semibold mb-6">設定入力</h2>
+
+                <!-- 基本設定 -->
+                <section class="mb-8 p-6 bg-white rounded-lg shadow">
+                    <h3 class="font-bold mb-4 text-xl">基本設定</h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">アプリ名</label>
+                            <input id="appName" type="text" placeholder="myapp" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" value="myapp">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">ベースイメージ</label>
+                            <select id="baseImage" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="node:18-alpine">Node.js 18 (Alpine)</option>
+                                <option value="python:3.11-slim">Python 3.11 (Slim)</option>
+                                <option value="nginx:alpine">Nginx (Static)</option>
+                                <option value="php:8.2-apache">PHP 8.2 + Apache</option>
+                                <option value="ubuntu:22.04">Ubuntu 22.04</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">公開ポート</label>
+                            <input id="port" type="number" placeholder="3000" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" value="3000">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">コマンド</label>
+                            <input id="command" type="text" placeholder="npm start" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" value="npm start">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 上級者向け: マルチステージ -->
+                <section id="multiStageSection" class="mb-8 p-6 advanced rounded-lg shadow">
+                    <div class="flex items-center mb-4">
+                        <input id="enableMultiStage" type="checkbox" class="mr-2 w-5 h-5">
+                        <label class="font-bold text-xl text-warning">マルチステージビルド（上級者向け）</label>
+                        <span class="ml-2 px-3 py-1 bg-yellow-200 text-xs rounded-full">上級者向け</span>
+                    </div>
+                    <div id="multiStageOptions" class="hidden grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">ビルド用イメージ</label>
+                            <input id="builderImage" type="text" placeholder="node:18" class="w-full p-3 border rounded-lg" value="node:18">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">ビルドコマンド</label>
+                            <input id="buildCmd" type="text" placeholder="npm run build" class="w-full p-3 border rounded-lg" value="npm run build">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">コピー元パス</label>
+                            <input id="copyFrom" type="text" placeholder="/app/dist" class="w-full p-3 border rounded-lg" value="/app/dist">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">コピー先パス</label>
+                            <input id="copyTo" type="text" placeholder="/usr/src/app/dist" class="w-full p-3 border rounded-lg" value="/usr/src/app/dist">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- docker-compose設定 -->
+                <section class="mb-8 p-6 bg-white rounded-lg shadow">
+                    <h3 class="font-bold mb-4 text-xl">docker-compose設定</h3>
+                    <div class="space-y-4">
+                        <label class="flex items-center">
+                            <input id="enableDb" type="checkbox" class="mr-2 w-5 h-5">
+                            <span>データベース（MySQL）追加</span>
+                        </label>
+                        <div id="dbOptions" class="hidden ml-6 p-4 bg-gray-50 rounded">
+                            <label class="block text-sm font-medium mb-2">DB名</label>
+                            <input id="dbName" type="text" value="mydb" class="w-full p-2 border rounded mb-2">
+                            <label class="block text-sm font-medium mb-2">DBポート</label>
+                            <input id="dbPort" type="number" value="3306" class="w-full p-2 border rounded">
+                        </div>
+                    </div>
+                </section>
+
+                <button onclick="generateFiles()" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-bold text-lg hover:bg-blue-700 transition">生成！</button>
+            </div>
+
+            <!-- 右: リアルタイムプレビュー -->
+            <div>
+                <h2 class="text-2xl font-semibold mb-6">リアルタイムプレビュー</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Dockerfile</label>
+                        <pre id="dockerfilePreview" class="preview p-6 rounded-lg h-64 overflow-auto border resize-none"></pre>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">docker-compose.yml</label>
+                        <pre id="composePreview" class="preview p-6 rounded-lg h-64 overflow-auto border resize-none"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 生成完了後ダウンロード -->
+        <div id="downloadSection" class="mt-8 p-6 bg-green-50 rounded-lg hidden">
+            <h3 class="font-bold text-xl mb-4">生成完了！</h3>
+            <div class="grid md:grid-cols-2 gap-4">
+                <button onclick="downloadFile('Dockerfile')" class="bg-green-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-green-700">Dockerfileをダウンロード</button>
+                <button onclick="downloadFile('docker-compose.yml')" class="bg-green-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-green-700">docker-compose.ymlをダウンロード</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // リアルタイム更新
+        const inputs = ['appName', 'baseImage', 'port', 'command', 'enableMultiStage', 'builderImage', 'buildCmd', 'copyFrom', 'copyTo', 'enableDb', 'dbName', 'dbPort'];
+        inputs.forEach(id => {
+            document.getElementById(id).addEventListener('input', updatePreview);
+            if (id === 'enableMultiStage') document.getElementById(id).addEventListener('change', toggleMultiStage);
+            if (id === 'enableDb') document.getElementById(id).addEventListener('change', toggleDb);
+        });
+
+        function toggleMultiStage() {
+            const opts = document.getElementById('multiStageOptions');
+            opts.classList.toggle('hidden', !document.getElementById('enableMultiStage').checked);
+            updatePreview();
+        }
+
+        function toggleDb() {
+            const opts = document.getElementById('dbOptions');
+            opts.classList.toggle('hidden', !document.getElementById('enableDb').checked);
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const preview = generatePreview();
+            document.getElementById('dockerfilePreview').textContent = preview.dockerfile;
+            document.getElementById('composePreview').textContent = preview.compose;
+        }
+
+        function generatePreview() {
+            const appName = document.getElementById('appName').value;
+            const baseImage = document.getElementById('baseImage').value;
+            const port = document.getElementById('port').value;
+            const command = document.getElementById('command').value;
+            const multiStage = document.getElementById('enableMultiStage').checked;
+            const builderImage = document.getElementById('builderImage').value;
+            const buildCmd = document.getElementById('buildCmd').value;
+            const copyFrom = document.getElementById('copyFrom').value;
+            const copyTo = document.getElementById('copyTo').value;
+            const enableDb = document.getElementById('enableDb').checked;
+            const dbName = document.getElementById('dbName').value;
+            const dbPort = document.getElementById('dbPort').value;
+
+            let dockerfile = `FROM ${baseImage}
+WORKDIR /app
+COPY . .
+EXPOSE ${port}
+CMD ["${command.split(' ').join('", "')}"]
+`;
+
+            if (multiStage) {
+                dockerfile = `# 上級者向け: マルチステージビルド
+FROM ${builderImage} AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN ${buildCmd}
+
+FROM ${baseImage}
+WORKDIR /app
+COPY --from=builder ${copyFrom} ${copyTo}
+EXPOSE ${port}
+CMD ["${command.split(' ').join('", "')}"]
+`;
+            }
+
+            let compose = `version: '3.8'
+services:
+  ${appName}:
+    build: .
+    ports:
+      - "${port}:${port}"
+    volumes:
+      - .:/app
+`;
+
+            if (enableDb) {
+                compose += `  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: ${dbName}
+    ports:
+      - "${dbPort}:${dbPort}"
+`;
+            }
+
+            return { dockerfile, compose };
+        }
+
+        function generateFiles() {
+            const preview = generatePreview();
+            // プレビューに表示済みなので、生成完了を表示
+            document.getElementById('downloadSection').classList.remove('hidden');
+        }
+
+        function downloadFile(filename) {
+            const preview = generatePreview();
+            const content = filename === 'Dockerfile' ? preview.dockerfile : preview.compose;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 初回プレビュー
+        updatePreview();
+    </script>
+</body>
+</html>
