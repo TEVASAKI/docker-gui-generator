@@ -64,5 +64,6 @@ Perplexity で作成したポン出しツールをベースに、これから機
 ## 更新履歴
 
 - **v1.0.0** … 初回。フォルダ構成・開発環境を整備。Perplexity ポン出し版を `src/` と `releases/v1.0.0/` に配置。
+- **dev（feature/wslconfig-complete-gui）** … `.wslconfig` 完全版 GUI ジェネレータ用サブアプリを `src/apps/wsl-config-generator/` に追加。
 
 （以降、バージョンアップのたびにここに追記していく）
