@@ -283,7 +283,16 @@
                     </div>
                 </section>
 
-                <button onclick="validate()" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-bold text-lg hover:bg-blue-700 sticky bottom-0">生成！</button>
+                <div class="sticky bottom-0 bg-gray-50 pt-3">
+                    <div class="flex gap-3">
+                        <button onclick="resetToMinimalDefaults()" class="w-1/3 bg-gray-200 text-gray-900 py-3 px-6 rounded-lg font-bold text-lg hover:bg-gray-300">
+                            デフォルトに戻す
+                        </button>
+                        <button onclick="validate()" class="w-2/3 bg-blue-600 text-white py-3 px-6 rounded-lg font-bold text-lg hover:bg-blue-700">
+                            生成！
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- 右: プレビュー -->
@@ -557,6 +566,52 @@ wsl free -h
             validateInputs();
             document.getElementById('completeSection').classList.remove('hidden');
             document.getElementById('completeSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetToMinimalDefaults() {
+            // 最低限の設定に戻す（[general] + [wsl2] 基本のみ）
+            document.getElementById('instanceIdleTimeout').value = 15000;
+
+            // 基本設定は推奨値へ
+            document.getElementById('memory').value = recommendedMemory;
+            document.getElementById('processors').value = recommendedCpu;
+            document.getElementById('swap').value = 2;
+
+            // 追加セクションを無効化して折りたたむ
+            const disableSection = (enableId, sectionId) => {
+                const enableEl = document.getElementById(enableId);
+                const sectionEl = document.getElementById(sectionId);
+                if (enableEl) enableEl.checked = false;
+                if (sectionEl) sectionEl.classList.add('hidden');
+            };
+
+            disableSection('enableAdvanced', 'advancedSection');
+            disableSection('enableNetwork', 'networkSection');
+            disableSection('enableExperimental', 'experimentalSection');
+
+            // 任意入力はクリア（無効化時の見通し優先）
+            const clearValue = (id, value = '') => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (el.tagName === 'SELECT') {
+                    el.value = value;
+                } else {
+                    el.value = value;
+                }
+            };
+
+            clearValue('swapFile', '');
+            clearValue('kernel', '');
+            clearValue('kernelCommandLine', '');
+            clearValue('vmSwitch', '');
+            clearValue('macAddress', '');
+            clearValue('ignoredPorts', '');
+            clearValue('defaultVhdSize', '');
+
+            // UI状態も戻す
+            document.getElementById('completeSection').classList.add('hidden');
+
+            updatePreview();
         }
 
         function copyToClipboard() {

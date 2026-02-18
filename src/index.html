@@ -94,7 +94,14 @@
                     </div>
                 </section>
 
-                <button onclick="generateFiles()" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-bold text-lg hover:bg-blue-700 transition">生成！</button>
+                <div class="flex gap-3 mt-2">
+                    <button onclick="resetToMinimalDefaults()" class="w-1/3 bg-gray-200 text-gray-900 py-3 px-6 rounded-lg font-bold text-lg hover:bg-gray-300 transition">
+                        デフォルトに戻す
+                    </button>
+                    <button onclick="generateFiles()" class="w-2/3 bg-blue-600 text-white py-3 px-6 rounded-lg font-bold text-lg hover:bg-blue-700 transition">
+                        生成！
+                    </button>
+                </div>
             </div>
 
             <!-- 右: リアルタイムプレビュー -->
@@ -208,6 +215,33 @@ services:
             }
 
             return { dockerfile, compose };
+        }
+
+        function resetToMinimalDefaults() {
+            // 最低限のデフォルト設定に戻す
+            document.getElementById('appName').value = 'myapp';
+            document.getElementById('baseImage').value = 'node:18-alpine';
+            document.getElementById('port').value = '3000';
+            document.getElementById('command').value = 'npm start';
+
+            // マルチステージ関連をオフ＋初期値
+            document.getElementById('enableMultiStage').checked = false;
+            document.getElementById('multiStageOptions').classList.add('hidden');
+            document.getElementById('builderImage').value = 'node:18';
+            document.getElementById('buildCmd').value = 'npm run build';
+            document.getElementById('copyFrom').value = '/app/dist';
+            document.getElementById('copyTo').value = '/usr/src/app/dist';
+
+            // DB 関連をオフ＋初期値
+            document.getElementById('enableDb').checked = false;
+            document.getElementById('dbOptions').classList.add('hidden');
+            document.getElementById('dbName').value = 'mydb';
+            document.getElementById('dbPort').value = '3306';
+
+            // 生成完了セクションを隠す
+            document.getElementById('downloadSection').classList.add('hidden');
+
+            updatePreview();
         }
 
         function generateFiles() {
